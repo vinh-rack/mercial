@@ -1,0 +1,165 @@
+version: '3.9'
+
+networks:
+  microservices:
+    driver: bridge
+
+services:
+  user_db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: ${USER_DB}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - user_db_data:/var/lib/postgresql/data
+      - ./services/user/db/init.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - "5432:5432"
+    networks:
+      - microservices
+
+  user:
+    build: ./services/user
+    ports:
+      - "50051:50051"
+    depends_on:
+      - user_db
+    environment:
+      DB_HOST: user_db
+      DB_NAME: ${USER_DB}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      GRPC_PORT: 50051
+    networks:
+      - microservices
+
+  inventory_db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: ${INVENTORY_DB}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - inventory_db_data:/var/lib/postgresql/data
+      - ./services/inventory/db/init.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - "5433:5432"
+    networks:
+      - microservices
+
+  inventory:
+    build: ./services/inventory
+    ports:
+      - "50052:50051"
+    depends_on:
+      - inventory_db
+    environment:
+      DB_HOST: inventory_db
+      DB_NAME: ${INVENTORY_DB}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      GRPC_PORT: 50051
+    networks:
+      - microservices
+
+  order_db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: ${ORDER_DB}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - order_db_data:/var/lib/postgresql/data
+      - ./services/order/db/init.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - "5434:5432"
+    networks:
+      - microservices
+
+  order:
+    build: ./services/order
+    ports:
+      - "50053:50051"
+    depends_on:
+      - order_db
+      - inventory
+      - payment
+      - notifications
+    environment:
+      DB_HOST: order_db
+      DB_NAME: ${ORDER_DB}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      GRPC_PORT: 50051
+      INVENTORY_SERVICE_URL: ${INVENTORY_SERVICE_URL}
+      PAYMENT_SERVICE_URL: ${PAYMENT_SERVICE_URL}
+      NOTIFICATIONS_SERVICE_URL: ${NOTIFICATIONS_SERVICE_URL}
+    networks:
+      - microservices
+
+  payment_db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: ${PAYMENT_DB}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - payment_db_data:/var/lib/postgresql/data
+      - ./services/payment/db/init.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - "5435:5432"
+    networks:
+      - microservices
+
+  payment:
+    build: ./services/payment
+    ports:
+      - "50054:50051"
+    depends_on:
+      - payment_db
+    environment:
+      DB_HOST: payment_db
+      DB_NAME: ${PAYMENT_DB}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      GRPC_PORT: 50051
+      NOTIFICATIONS_SERVICE_URL: ${NOTIFICATIONS_SERVICE_URL}
+    networks:
+      - microservices
+
+  notifications_db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: ${NOTIFICATIONS_DB}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - notifications_db_data:/var/lib/postgresql/data
+      - ./services/notifications/db/init.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - "5436:5432"
+    networks:
+      - microservices
+
+  notifications:
+    build: ./services/notifications
+    ports:
+      - "50055:50051"
+    depends_on:
+      - notifications_db
+    environment:
+      DB_HOST: notifications_db
+      DB_NAME: ${NOTIFICATIONS_DB}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      GRPC_PORT: 50051
+    networks:
+      - microservices
+
+volumes:
+  user_db_data:
+  inventory_db_data:
+  order_db_data:
+  payment_db_data:
+  notifications_db_data:
