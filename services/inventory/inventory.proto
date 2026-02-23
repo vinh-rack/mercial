@@ -1,0 +1,97 @@
+syntax = "proto3";
+
+package inventory;
+
+service InventoryService {
+  rpc GetProductById (GetProductByIdRequest) returns (ProductResponse);
+  rpc GetProductBySku (GetProductBySkuRequest) returns (ProductResponse);
+  rpc ListProducts (ListProductsRequest) returns (ListProductsResponse);
+  rpc CreateProduct (CreateProductRequest) returns (ProductResponse);
+  rpc UpdateProduct (UpdateProductRequest) returns (ProductResponse);
+  rpc DeactivateProduct (DeleteProductRequest) returns (DeleteProductResponse);
+  rpc DeleteProduct (DeleteProductRequest) returns (DeleteProductResponse);
+  rpc AdjustStock (AdjustStockRequest) returns (StockResponse);
+  rpc GetStockLevel (GetProductByIdRequest) returns (StockResponse);
+}
+
+/* ---------- Requests ---------- */
+
+message GetProductByIdRequest {
+  uint64 prod_id = 1;
+}
+
+message GetProductBySkuRequest {
+  string sku = 1;
+}
+
+message ListProductsRequest {
+  uint32 limit = 1;
+  uint32 offset = 2;
+}
+
+message CreateProductRequest {
+  string name = 1;
+  string sku = 2;
+  uint64 cat_id = 3;
+  string short_desc = 4;
+  string long_desc = 5;
+  uint64 price = 6;
+  uint64 discount_price = 7;
+  uint32 stock_qty = 8;
+  uint32 warranty_months = 9;
+  bool status = 10;
+}
+
+message UpdateProductRequest {
+  uint64 prod_id = 1;
+  CreateProductRequest data = 2;
+}
+
+message DeleteProductRequest {
+  uint64 prod_id = 1;
+}
+
+message AdjustStockRequest {
+  uint64 prod_id = 1;
+  int32 adjustment = 2;
+}
+
+/* ---------- Responses ---------- */
+
+message ProductResponse {
+  uint64 prod_id = 1;
+  uint64 cat_id = 2;
+  string name = 3;
+  string slug = 4;
+  string sku = 5;
+  string short_desc = 6;
+  string long_desc = 7;
+  uint64 price = 8;
+  uint64 discount_price = 9;
+  uint32 warranty_months = 10;
+  uint32 stock_qty = 11;
+  bool status = 12;
+  repeated ProductImage images = 13;
+}
+
+message ListProductsResponse {
+  repeated ProductResponse products = 1;
+}
+
+message DeleteProductResponse {
+  bool success = 1;
+}
+
+message StockResponse {
+  uint64 prod_id = 1;
+  uint32 stock_qty = 2;
+}
+
+/* ---------- Nested ---------- */
+
+message ProductImage {
+  uint64 img_id = 1;
+  string img_url = 2;
+  string alt_text = 3;
+  uint32 sort_order = 4;
+}

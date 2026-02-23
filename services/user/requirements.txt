@@ -1,2 +1,5 @@
-grpcio==1.60.0
-grpcio-tools==1.60.0
+grpcio==1.78.1
+grpcio-tools==1.78.1
+psycopg==3.3.3
+pydantic==2.12.5
+pydantic-settings==2.13.1

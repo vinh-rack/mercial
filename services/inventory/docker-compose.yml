@@ -8,18 +8,32 @@ services:
       POSTGRES_USER: ${DB_USER}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
     volumes:
+      - inventory_db_data:/var/lib/postgresql/data
       - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
     ports:
       - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
   inventory:
-    build: .
+    # build: .
+    build:
+      context: ../..
+      dockerfile: services/inventory/Dockerfile
     ports:
       - "50051:50051"
     depends_on:
-      - inventory_db
+      inventory_db:
+        condition: service_healthy
     environment:
-      DB_HOST: ${DB}
-      DB_NAME: ${DB}
+      DB_HOST: inventory_db
+      DB: ${DB}
       DB_USER: ${DB_USER}
       DB_PASSWORD: ${DB_PASSWORD}
+    restart: unless-stopped
+
+volumes:
+  inventory_db_data:

@@ -11,7 +11,7 @@ indent_style = space
 indent_size = 4
 
 # Settings for Python, TypeScript, and TypeScript JSX
-[*.{py,ts,tsx}]
+[*.{py,ts,tsx,proto}]
 charset = utf-8
 end_of_line = lf
 insert_final_newline = true
